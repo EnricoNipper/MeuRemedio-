@@ -44,79 +44,51 @@ function Local(props: LocalProps) {
     Município: '',
     Bairro: '',
   });
+  const [isLocalizacaoObtida, setIsLocalizacaoObtida] = useState(false); // Estado para controlar se a localização foi obtida
 
-  useEffect(() => {
-    const btnLocalizacao = document.getElementById('btn-localizacao');
+  useEffect(() => { // Sem dependências, ele será executado apenas uma vez quando o componente for montado
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setLatitude(position.coords.latitude);
+          setLongitude(position.coords.longitude);
+          setError(null);
 
-    if (btnLocalizacao) {
-      btnLocalizacao.addEventListener('click', () => {
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            (position) => {
-              setLatitude(position.coords.latitude);
-              setLongitude(position.coords.longitude);
-              setError(null);
+          fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${position.coords.latitude}&lon=${position.coords.longitude}&zoom=16`)
+            .then(response => response.json())
+            .then(data => {
+              if (data.address) {
+                const ufSigla = Object.entries(estadosSiglas).find(([estado, sigla]) => estado.toLowerCase() === data.address.state.toLowerCase())?.[1] || '';
 
-              fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${position.coords.latitude}&lon=${position.coords.longitude}&zoom=16`)
-                .then(response => response.json())
-                .then(data => {
-                  if (data.address) {
-                    // Encontre a sigla do estado correspondente
-                    const ufSigla = Object.entries(estadosSiglas).find(([estado, sigla]) => estado.toLowerCase() === data.address.state.toLowerCase())?.[1] || '';
+                const newEndereco = {
+                  UF: ufSigla, 
+                  Município: data.address.city || '',
+                  Bairro: data.address.suburb || data.address.neighbourhood || '', 
+                };
+                setEndereco(newEndereco);
+                setIsLocalizacaoObtida(true);
+                if (props.onLocationChange) {
+                  props.onLocationChange(newEndereco);
+                }
+              } else {
+                setError('Não foi possível obter o endereço.');
+              }
+            })
+            .catch(error => {
+              setError('Erro ao obter o endereço.');
+            });
 
-                    const newEndereco = {
-                      UF: ufSigla, 
-                      Município: data.address.city || '',
-                      Bairro: data.address.suburb || data.address.neighbourhood || '', 
-                    };
-                    setEndereco(newEndereco);
-                    if (props.onLocationChange) {
-                      props.onLocationChange(newEndereco); // Notifica o componente Farmacia
-                    }
-                  } else {
-                    setError('Não foi possível obter o endereço.');
-                  }
-                })
-                .catch(error => {
-                  setError('Erro ao obter o endereço.');
-                })
-                .catch(error => {
-                  setError('Erro ao obter o endereço.');
-                });
-
-            },
-            (error) => {
-              setError(error.message);
-            }
-          );
-        } else {
-          setError('Geolocalização não suportada pelo navegador.');
+        },
+        (error) => {
+          setError(error.message);
         }
-      });
+      );
+    } else {
+      setError('Geolocalização não suportada pelo navegador.');
     }
-  }, []);
+  }, []); // Sem dependências, o useEffect será executado apenas uma vez quando o componente for montado
 
-  return (
-    <div className='buttons'>
-      <button onClick={() => setIsOpen(!isOpen)} id="btn-localizacao">
-        {isOpen ? 'Fechar sua localização' : 'Qual sua localização'}
-      </button>
-      {isOpen && (
-        <>
-          {latitude && longitude && (
-            <p>Latitude: {latitude}, Longitude: {longitude}</p>
-          )}
-          {endereco && (
-            <>
-              <p>UF: {endereco.UF}</p>
-              <p>Município: {endereco.Município}</p>
-              <p>Bairro: {endereco.Bairro}</p>
-            </>
-          )}
-          {error && <p className="error">{error}</p>}
-        </>
-      )}
-    </div>
-  );
+  return null;
 }
+
 export default Local;
