@@ -109,7 +109,7 @@ function Farmacia(): React.ReactElement {
                                     type="text"
                                     id="filterUF"
                                     value={filterUF}
-                                    onChange={(e) => setFilterUF(e.target.value)}
+                                    onChange={(e) => {setFilterUF(e.target.value); setCurrentPage(1);}}
                                 />
                             </div>
                             <div className='p-2'>
@@ -119,7 +119,7 @@ function Farmacia(): React.ReactElement {
                                     type="text"
                                     id="filterMunicipio"
                                     value={filterMunicipio}
-                                    onChange={(e) => setFilterMunicipio(e.target.value)}
+                                    onChange={(e) => {setFilterMunicipio(e.target.value); setCurrentPage(1);}}
                                 />
                             </div>
                             <div className='p-2'>
@@ -129,7 +129,7 @@ function Farmacia(): React.ReactElement {
                                     type="text"
                                     id="filterBairro"
                                     value={filterBairro}
-                                    onChange={(e) => setFilterBairro(e.target.value)}
+                                    onChange={(e) => {setFilterBairro(e.target.value); setCurrentPage(1);}}
                                 />
                             </div>
                         </div>
